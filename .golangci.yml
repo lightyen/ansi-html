@@ -1,0 +1,10 @@
+run:
+  concurrency: 8
+
+linters:
+  enable:
+    - revive
+    - staticcheck
+    - misspell # https://github.com/client9/misspell/blob/master/words.go
+  presets:
+    - import

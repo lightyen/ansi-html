@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>ANSI Demo</title>
+		<style>
+		{{if .Class}}
+		{{.Class}}
+		{{end}}
+		.ansi-link {
+			text-decoration: underline dotted;
+		}
+		.ansi-link:hover {
+			text-decoration: underline;
+		}
+		</style>
+	</head>
+	<body style="color:{{if .Foreground}}{{.Foreground}}{{else}}initial{{end}};background-color:{{if .Background}}{{.Background}}{{else}}initial{{end}}">
+		<pre id="demo" style="font-size:{{if .FontSize}}{{.FontSize}}{{else}}20px{{end}};font-family:{{if .FontFamily}}{{.FontFamily}}{{else}}Cascadia Code PL, Cascadia Mono PL, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;{{end}}">{{if .Content}}{{.Content}}{{end}}</pre>
+	</body>
+</html>
