@@ -2,6 +2,7 @@ package ansihtml
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"strconv"
@@ -98,9 +99,18 @@ func (c *Converter) ApplyOptions(options ...Option) {
 }
 
 func (c *Converter) Copy(dst io.Writer, src io.Reader) error {
+	return c.CopyWithContext(context.Background(), dst, src)
+}
+
+func (c *Converter) CopyWithContext(ctx context.Context, dst io.Writer, src io.Reader) error {
 	w := bufio.NewWriter(dst)
 	r := bufio.NewReader(src)
 	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
 		char, _, err := r.ReadRune()
 		if err == io.EOF {
 			break
