@@ -39,7 +39,7 @@ func (r *renderer) spanOpen(w writer, s *spanStyle) (size int64, err error) {
 			if s.bgMode != cmRGB {
 				classes = append(classes, r.classPrefix+"bg-"+s.background)
 			} else {
-				props["color"] = s.background
+				props["background-color"] = s.background
 			}
 		}
 		if s.bold {

@@ -138,9 +138,9 @@ func TestOtherClass(t *testing.T) {
 	c := ansihtml.NewConverter(ansihtml.SetMode(ansihtml.Class))
 	expect := newExpect(t, c)
 	expect("\x1b[7mhelloworld\x1b[m", `<span class="ansi-fg-inverse ansi-bg-inverse">helloworld</span>`)
-	expect("\x1b[1;38;5;1mhelloworld\x1b[m", `<span class="ansi-fg-9 ansi-bold">helloworld</span>`)
+	expect("\x1b[1;44;38;5;1mhelloworld\x1b[m", `<span class="ansi-fg-9 ansi-bg-4 ansi-bold">helloworld</span>`)
 	expect("\x1b[2;3;4;5;6;7;8;9mhelloworld\x1b[m", `<span class="ansi-fg-inverse ansi-bg-inverse ansi-underline ansi-strike ansi-italic ansi-dim ansi-hidden">helloworld</span>`)
-	expect("\x1b[2;31mhelloworld\x1b[m", `<span class="ansi-fg-1 ansi-dim">helloworld</span>`)
+	expect("\x1b[2;31;48;2;255;240;103;38;2;2;2;2mhelloworld\x1b[m", `<span class="ansi-dim" style="background-color:#fff067;color:#020202">helloworld</span>`)
 }
 
 func TestError(t *testing.T) {
