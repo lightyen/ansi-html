@@ -151,7 +151,9 @@ func (r *renderer) anchorOpen(w writer, a *anchor) (size int64, err error) {
 	sort.Strings(keys)
 	_, _ = buf.WriteString(`<a `)
 	_, _ = buf.WriteString(fmt.Sprintf("href=\"%s\"", a.url))
-	_, _ = buf.WriteString(" class=\"ansi-link\"")
+	_, _ = buf.WriteString(" class=\"")
+	_, _ = buf.WriteString(r.classPrefix)
+	_, _ = buf.WriteString("link\"")
 
 	for i := 0; i < len(keys); i++ {
 		_, _ = buf.WriteString(fmt.Sprintf(" %s=\"%s\"", keys[i], a.params[keys[i]]))
