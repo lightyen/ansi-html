@@ -405,6 +405,7 @@ func (c *Converter) readCSI(r io.RuneReader) (err error) {
 	}
 	var params []rune
 	var num rune
+	var first rune = -1
 	for {
 		code, _, err := r.ReadRune()
 		if err == io.EOF {
@@ -412,6 +413,9 @@ func (c *Converter) readCSI(r io.RuneReader) (err error) {
 		}
 		if err != nil {
 			return err
+		}
+		if first < 0 {
+			first = code
 		}
 		if isEnd(code) {
 			params = append(params, num)

@@ -14,6 +14,7 @@ import (
 
 var options = ansihtml.Options{
 	MinimumContrastRatio: 1,
+	ClassPrefix:          "ansi-",
 }
 
 func newExpect(t *testing.T, c *ansihtml.Converter) func(input string, expected string) {
