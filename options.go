@@ -26,11 +26,18 @@ func SetClassPrefix(prefix string) Option {
 	}
 }
 
+func SetEscapeHTML(b bool) Option {
+	return func(c *Converter) {
+		c.escapeHTML = b
+	}
+}
+
 type Options struct {
 	Mode                 Mode
 	ClassPrefix          string
 	MinimumContrastRatio float64
 	Theme                Theme
+	EscapeHTML           bool
 }
 
 func SetOptions(opts Options) Option {
@@ -42,5 +49,6 @@ func SetOptions(opts Options) Option {
 		}
 		c.classPrefix = opts.ClassPrefix
 		c.palette = buildPalette(opts.Theme)
+		c.escapeHTML = opts.EscapeHTML
 	}
 }

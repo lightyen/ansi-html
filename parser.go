@@ -54,6 +54,7 @@ type Converter struct {
 	mode                 Mode
 	classPrefix          string
 	palette              palette
+	escapeHTML           bool
 	contrastCache        *contrastCache
 	prevStyle            *spanStyle
 	prevAnchor           *anchor
@@ -67,6 +68,7 @@ func NewConverter(options ...Option) *Converter {
 	c := &Converter{
 		minimumContrastRatio: 3,
 		palette:              buildDefaultPalette(),
+		escapeHTML:           false,
 		mode:                 Inline,
 		classPrefix:          "ansi-",
 		contrastCache:        newContrastCache(),
@@ -95,7 +97,7 @@ func (c *Converter) ApplyOptions(options ...Option) {
 			opt(c)
 		}
 	}
-	c.r = &renderer{classPrefix: c.classPrefix, isClass: c.mode == Class, defaultFg: c.palette.foreground}
+	c.r = &renderer{classPrefix: c.classPrefix, isClass: c.mode == Class, defaultFg: c.palette.foreground, escapeHTML: c.escapeHTML}
 }
 
 func (c *Converter) Copy(dst io.Writer, src io.Reader) error {
