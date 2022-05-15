@@ -121,6 +121,7 @@ func TestMinimumContrastRatio(t *testing.T) {
 
 func TestOtherInline(t *testing.T) {
 	expect := newExpect(t, ansihtml.NewConverter())
+	expect("\u001b(B\u001b[mhelloworld\x1b[m", "helloworld")
 	expect("\x1b[3;100mhelloworl\x1b[8md\x1b[m", `<span style="background-color:#4f5666;font-style:italic">helloworl</span><span style="background-color:#4f5666;font-style:italic;opacity:0">d</span>`)
 	expect("\x1b[3;100;49mhelloworld\x1b[m", `<span style="font-style:italic">helloworld</span>`)
 	expect("\x1b[48;2;3;4;5mhelloworld\x1b[m", `<span style="background-color:#030405">helloworld</span>`)
@@ -141,6 +142,12 @@ func TestOtherClass(t *testing.T) {
 	expect("\x1b[1;44;38;5;1mhelloworld\x1b[m", `<span class="ansi-fg-9 ansi-bg-4 ansi-bold">helloworld</span>`)
 	expect("\x1b[2;3;4;5;6;7;8;9mhelloworld\x1b[m", `<span class="ansi-fg-inverse ansi-bg-inverse ansi-underline ansi-strike ansi-italic ansi-dim ansi-hidden">helloworld</span>`)
 	expect("\x1b[2;31;48;2;255;240;103;38;2;2;2;2mhelloworld\x1b[m", `<span class="ansi-dim" style="background-color:#fff067;color:#020202">helloworld</span>`)
+}
+
+func TestEscape(t *testing.T) {
+	c := ansihtml.NewConverter()
+	expect := newExpect(t, c)
+	expect("\x1b[9;31m<x-item> \x22x&words\x22 </x-item>\x1b[0m", `<span style="color:#e05561;text-decoration:line-through">&lt;x-item&gt; &quot;x&amp;words&quot; &lt;/x-item&gt;</span>`)
 }
 
 func TestError(t *testing.T) {

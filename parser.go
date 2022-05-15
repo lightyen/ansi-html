@@ -136,6 +136,12 @@ func (c *Converter) CopyWithContext(ctx context.Context, dst io.Writer, src io.R
 				if err := c.readOSC(r, w); err != nil {
 					return err
 				}
+			} else if nextChar == xLeftRoundBracket {
+				if err := c.readAny(r); err != nil {
+					return err
+				}
+			} else {
+				// not implement yet
 			}
 			continue
 		}
@@ -543,6 +549,25 @@ func (c *Converter) readOSC(r io.RuneReader, w writer) (err error) {
 			_, _ = urlBuilder.WriteRune(code)
 		} else {
 			continue
+		}
+	}
+	return
+}
+
+func (c *Converter) readAny(r io.RuneReader) (err error) {
+	isEnd := func(char rune) bool {
+		return char < 0x20 || char >= 0x40
+	}
+	for {
+		code, _, err := r.ReadRune()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		if isEnd(code) {
+			break
 		}
 	}
 	return

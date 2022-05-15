@@ -139,6 +139,18 @@ func (r *renderer) spanClose(w writer) (size int, err error) {
 }
 
 func (r *renderer) rune(w writer, c rune) (size int, err error) {
+	switch c {
+	case '<':
+		return w.WriteString("&lt;")
+	case '>':
+		return w.WriteString("&gt;")
+	case '&':
+		return w.WriteString("&amp;")
+	case '"':
+		return w.WriteString("&quot;")
+	case xSingleQuote:
+		return w.WriteString("&apos;")
+	}
 	return w.WriteRune(c)
 }
 
