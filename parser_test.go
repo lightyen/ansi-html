@@ -153,6 +153,34 @@ func TestOtherClass(t *testing.T) {
 	expect("\x1b[2;31;48;2;255;240;103;38;2;2;2;2mhelloworld\x1b[m", `<span class="ansi-dim" style="background-color:#fff067;color:#020202">helloworld</span>`)
 }
 
+func TestTheme(t *testing.T) {
+	theme := ansihtml.Theme{
+		Black:   "#000000",
+		Red:     "rgb(211 79  86)",
+		Green:   "#B9C954",
+		Yellow:  "#E6C452",
+		Blue:    "#7CA7D8",
+		Magenta: "#C299D6",
+		Cyan:    "#73BFB1",
+		White:   "#FFFFFF",
+		Gray:    "rgb(73 79 92)",
+	}
+	expect := newExpect(t, ansihtml.NewConverter(ansihtml.SetTheme(theme)))
+	expect("\u001b(B\u001b[mhelloworld\x1b[m", `helloworld`)
+	expect("\x1b[3;100mhelloworl\x1b[8md\x1b[m", `<span style="background-color:#494f5c;font-style:italic">helloworl</span><span style="background-color:#494f5c;font-style:italic;opacity:0">d</span>`)
+	expect("\x1b[3;100;49mhelloworld\x1b[m", `<span style="font-style:italic">helloworld</span>`)
+	expect("\x1b[48;2;3;4;5mhelloworld\x1b[m", `<span style="background-color:#030405">helloworld</span>`)
+	expect("hello\x0bwo\x1bmrld\x1b[m", `helloworld`)
+	expect("\x1b[38;5;2mhelloworld\x1b[m", `<span style="color:#b9c954">helloworld</span>`)
+	expect("\x1b[38;5;2;1mhelloworld\x1b[m", `<span style="color:#a5e075;font-weight:bold">helloworld</span>`)
+	expect("\x1b[38;2;2;4;6mhelloworld\x1b[m", `<span style="color:#020406">helloworld</span>`)
+	expect("\x1b]8;;http://example.com\x1b\\This is a link", `<a href="http://example.com" class="ansi-link">This is a link</a>`)
+	expect("\x1b[2;31;41mhelloworld\x1b[m", `<span style="background-color:#d34f56;color:#f6d2d280">helloworld</span>`)
+	theme.Foreground = "#eee"
+	expect = newExpect(t, ansihtml.NewConverter(ansihtml.SetTheme(theme)))
+	expect("\x1b[2;41mhelloworld\x1b[m", `<span style="background-color:#d34f56;color:#eeeeee80">helloworld</span>`)
+}
+
 func TestEscape(t *testing.T) {
 	c := ansihtml.NewConverter(ansihtml.SetEscapeHTML(true))
 	expect := newExpect(t, c)

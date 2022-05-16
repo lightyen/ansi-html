@@ -3,8 +3,8 @@ package ansihtml
 import (
 	"fmt"
 	"math"
+	"regexp"
 	"strconv"
-	"strings"
 )
 
 type colorMode int32
@@ -387,29 +387,70 @@ var defaultColors = [256]string{
 	"#eeeeee",
 }
 
-func toColorObject(hexRgb string) *colorObject {
-	parseHexColor := func(rgb string) (rune, bool) {
-		if strings.HasPrefix(rgb, "#") {
-			rgb = rgb[1:]
+var hexRe = regexp.MustCompile("(?:^#?([A-Fa-f0-9]{6})(?:[A-Fa-f0-9]{2})?$)|(?:^#?([A-Fa-f0-9]{3})[A-Fa-f0-9]?$)")
+var rgbaRe = regexp.MustCompile("(?:^rgba?\\(\\s*([+-]?(?:\\d*[.])?\\d+)\\s*,\\s*([+-]?(?:\\d*[.])?\\d+)\\s*,\\s*([+-]?(?:\\d*[.])?\\d+)\\s*(?:,\\s*([+-]?(?:\\d*[.])?\\d+)\\s*)?\\)$)")
+var rgbaRe2 = regexp.MustCompile("(?:^rgba?\\(\\s*([+-]?(?:\\d*[.])?\\d+)\\s* \\s*([+-]?(?:\\d*[.])?\\d+)\\s* \\s*([+-]?(?:\\d*[.])?\\d+)\\s*(?:/\\s*([+-]?(?:\\d*[.])?\\d+)\\s*)?\\)$)")
+
+func parseColor(value string) (rune, bool) {
+	parseHexColor := func(value string) (rune, bool) {
+		var result = hexRe.FindStringSubmatch(value)
+		if result != nil {
+			if result[1] != "" {
+				if v, err := strconv.ParseInt(result[1], 16, 32); err == nil {
+					return rune(v), true
+				}
+			} else if result[2] != "" {
+				if v, err := strconv.ParseInt(result[2], 16, 32); err == nil {
+					r := v & 0xf00
+					g := v & 0xf0
+					b := v & 0xf
+					r = r<<12 | r<<8
+					g = g<<8 | g<<4
+					b = b<<4 | b
+					return rune(r | g | b), true
+				}
+			}
 		}
-		switch len(rgb) {
-		case 8:
-			rgb = rgb[:6]
-		case 6:
-		case 4:
-			rgb = strings.Repeat(rgb[0:1], 2) + strings.Repeat(rgb[1:2], 2) + strings.Repeat(rgb[2:3], 2)
-		case 3:
-			rgb = strings.Repeat(rgb[0:1], 2) + strings.Repeat(rgb[1:2], 2) + strings.Repeat(rgb[2:3], 2)
-		default:
-			return 0, false
-		}
-		xxx, err := strconv.ParseInt(rgb, 16, 32)
-		if err != nil {
-			return 0, false
-		}
-		return rune(xxx), true
+		return -1, false
 	}
-	rgb, ok := parseHexColor(hexRgb)
+	// ignore alpha
+	parseRgbaColor := func(value string) (rune, bool) {
+		toInt := func(value string) int32 {
+			v, _ := strconv.ParseFloat(value, 32)
+			v = math.Min(255.0, math.Max(0, v))
+			return int32(math.Round(v))
+		}
+		var result = rgbaRe.FindStringSubmatch(value)
+		if result != nil {
+			if result != nil {
+				r := toInt(result[1])
+				g := toInt(result[2])
+				b := toInt(result[3])
+				return rune(r<<16 | g<<8 | b), true
+			}
+		}
+		result = rgbaRe2.FindStringSubmatch(value)
+		if result != nil {
+			if result != nil {
+				r := toInt(result[1])
+				g := toInt(result[2])
+				b := toInt(result[3])
+				return rune(r<<16 | g<<8 | b), true
+			}
+		}
+		return -1, false
+	}
+	if color, ok := parseHexColor(value); ok {
+		return color, ok
+	}
+	if color, ok := parseRgbaColor(value); ok {
+		return color, ok
+	}
+	return -1, false
+}
+
+func toColorObject(hexRgb string) *colorObject {
+	rgb, ok := parseColor(hexRgb)
 	if !ok {
 		return nil
 	}
