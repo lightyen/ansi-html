@@ -136,7 +136,7 @@ func TestOtherInline(t *testing.T) {
 	expect("\x1b[48;2;3;4;5mhelloworld\x1b[m", `<span style="background-color:#030405">helloworld</span>`)
 	expect("hello\x0bwo\x1bmrld\x1b[m", `helloworld`)
 	expect("\x1b[38;5;2mhelloworld\x1b[m", `<span style="color:#8cc265">helloworld</span>`)
-	expect("\x1b[38;5;2;1mhelloworld\x1b[m", `<span style="color:#a5e075;font-weight:700">helloworld</span>`)
+	expect("\x1b[38;5;2;1mhelloworld\x1b[m", `<span style="color:#a5e075;font-weight:bold">helloworld</span>`)
 	expect("\x1b[38;2;2;4;6mhelloworld\x1b[m", `<span style="color:#020406">helloworld</span>`)
 	expect("\x1b]8;;http://example.com\x1b\\This is a link", `<a href="http://example.com" class="ansi-link">This is a link</a>`)
 	expect("\x1b[2;31;41mhelloworld\x1b[m", `<span style="background-color:#e05561;color:#fcdfe380">helloworld</span>`)

@@ -176,7 +176,7 @@ func ToDemo(ansiText string, options ...Option) (string, error) {
 	.ansi-bg-15 { background-color: #d7dae0 }
 	.ansi-fg-inverse { color: %s }
 	.ansi-bg-inverse { background-color: %s }
-	.ansi-bold { font-weight: 700 }
+	.ansi-bold { font-weight: bold }
 	.ansi-underline { text-decoration: underline }
 	.ansi-strike { text-decoration: line-through }
 	.ansi-underline.ansi-strike { text-decoration: underline line-through }

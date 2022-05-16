@@ -71,7 +71,7 @@ func (c *Converter) spanOpen(w writer, s *spanStyle) (size int64, err error) {
 			props["background-color"] = s.background
 		}
 		if s.bold {
-			props["font-weight"] = "700"
+			props["font-weight"] = "bold"
 		}
 		if s.underline || s.strike {
 			var values []string
