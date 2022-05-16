@@ -49,9 +49,8 @@ type anchor struct {
 }
 
 type Converter struct {
-	r                    *renderer
 	minimumContrastRatio float64
-	mode                 Mode
+	isClass              bool
 	classPrefix          string
 	palette              palette
 	escapeHTML           bool
@@ -69,7 +68,7 @@ func NewConverter(options ...Option) *Converter {
 		minimumContrastRatio: 3,
 		palette:              buildDefaultPalette(),
 		escapeHTML:           false,
-		mode:                 Inline,
+		isClass:              false,
 		classPrefix:          "ansi-",
 		contrastCache:        newContrastCache(),
 		styleChanged:         true,
@@ -97,7 +96,6 @@ func (c *Converter) ApplyOptions(options ...Option) {
 			opt(c)
 		}
 	}
-	c.r = &renderer{classPrefix: c.classPrefix, isClass: c.mode == Class, defaultFg: c.palette.foreground, escapeHTML: c.escapeHTML}
 }
 
 func (c *Converter) Copy(dst io.Writer, src io.Reader) error {
@@ -169,17 +167,17 @@ func (c *Converter) CopyWithContext(ctx context.Context, dst io.Writer, src io.R
 			continue
 		}
 
-		if err := c.rune(w, char); err != nil {
+		if err := c.writeRune(w, char); err != nil {
 			return err
 		}
 	}
 	if c.isSpan {
-		if _, err := c.r.spanClose(w); err != nil {
+		if _, err := c.spanClose(w); err != nil {
 			return err
 		}
 	}
 	if c.isAnchor {
-		if _, err := c.r.anchorClose(w); err != nil {
+		if _, err := c.anchorClose(w); err != nil {
 			return err
 		}
 	}
@@ -228,7 +226,7 @@ func (c *Converter) gatherStyle() (*spanStyle, error) {
 
 	var err error
 	var foreground string
-	if c.mode == Class && fgMode != cmRGB {
+	if c.isClass && fgMode != cmRGB {
 		foreground = c.getForegroundClass(fgMode, fgColor)
 	} else {
 		foreground, err = c.getForegroundCSS(bgMode, bgColor, fgMode, fgColor)
@@ -238,7 +236,7 @@ func (c *Converter) gatherStyle() (*spanStyle, error) {
 	}
 
 	var background string
-	if c.mode == Class && bgMode != cmRGB {
+	if c.isClass && bgMode != cmRGB {
 		background = c.getBackgroundClass(bgMode, bgColor)
 	} else {
 		background, err = c.getBackgroundCSS(bgMode, bgColor)
@@ -263,7 +261,7 @@ func (c *Converter) gatherStyle() (*spanStyle, error) {
 	return style, nil
 }
 
-func (c *Converter) rune(w writer, char rune) error {
+func (c *Converter) writeRune(w writer, char rune) error {
 	if c.styleChanged {
 		style, err := c.gatherStyle()
 		if err != nil {
@@ -271,21 +269,21 @@ func (c *Converter) rune(w writer, char rune) error {
 		}
 		if !equalStyle(c.prevStyle, style) {
 			if needStyle(c.prevStyle) {
-				if _, err := c.r.spanClose(w); err != nil {
+				if _, err := c.spanClose(w); err != nil {
 					return err
 				}
 			}
 			c.isSpan = needStyle(style)
 			c.prevStyle = style
 			if c.isSpan {
-				if _, err := c.r.spanOpen(w, style); err != nil {
+				if _, err := c.spanOpen(w, style); err != nil {
 					return err
 				}
 			}
 		}
 		c.styleChanged = false
 	}
-	if _, err := c.r.rune(w, char); err != nil {
+	if _, err := c.rune(w, char); err != nil {
 		return err
 	}
 	return w.Flush()
@@ -460,13 +458,13 @@ func (c *Converter) readOSC(r io.RuneReader, w writer) (err error) {
 	state := 0
 	wrapSpan := func(cb func() error) (err error) {
 		if c.isSpan {
-			if _, err = c.r.spanClose(w); err != nil {
+			if _, err = c.spanClose(w); err != nil {
 				return
 			}
 			if err = cb(); err != nil {
 				return
 			}
-			if _, err = c.r.spanOpen(w, c.prevStyle); err != nil {
+			if _, err = c.spanOpen(w, c.prevStyle); err != nil {
 				return
 			}
 			return
@@ -495,7 +493,7 @@ func (c *Converter) readOSC(r io.RuneReader, w writer) (err error) {
 
 			if c.prevAnchor != nil {
 				err = wrapSpan(func() error {
-					_, err := c.r.anchorNext(w, a)
+					_, err := c.anchorNext(w, a)
 					return err
 				})
 				if err != nil {
@@ -503,7 +501,7 @@ func (c *Converter) readOSC(r io.RuneReader, w writer) (err error) {
 				}
 			} else {
 				err = wrapSpan(func() error {
-					_, err := c.r.anchorOpen(w, a)
+					_, err := c.anchorOpen(w, a)
 					return err
 				})
 				if err != nil {
@@ -517,7 +515,7 @@ func (c *Converter) readOSC(r io.RuneReader, w writer) (err error) {
 			return
 		}
 		err = wrapSpan(func() error {
-			_, err := c.r.anchorClose(w)
+			_, err := c.anchorClose(w)
 			c.prevAnchor = nil
 			return err
 		})

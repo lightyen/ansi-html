@@ -10,7 +10,7 @@ func SetTheme(theme Theme) Option {
 
 func SetMode(mode Mode) Option {
 	return func(c *Converter) {
-		c.mode = mode
+		c.isClass = mode == Class
 	}
 }
 
@@ -42,7 +42,7 @@ type Options struct {
 
 func SetOptions(opts Options) Option {
 	return func(c *Converter) {
-		c.mode = opts.Mode
+		c.isClass = opts.Mode == Class
 		c.minimumContrastRatio = opts.MinimumContrastRatio
 		if opts.MinimumContrastRatio < 1 {
 			c.minimumContrastRatio = 3

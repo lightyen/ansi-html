@@ -15,51 +15,53 @@ type writer interface {
 	Flush() error
 }
 
-type renderer struct {
-	classPrefix string
-	defaultFg   *colorObject
-	isClass     bool
-	escapeHTML  bool
+type render interface {
+	spanOpen(w writer, s *spanStyle) (size int64, err error)
+	spanClose(w writer) (size int, err error)
+	rune(w writer, c rune) (size int, err error)
+	anchorOpen(w writer, a *anchor) (size int64, err error)
+	anchorNext(w writer, a *anchor) (size int64, err error)
+	anchorClose(w writer) (size int, err error)
 }
 
-func (r *renderer) spanOpen(w writer, s *spanStyle) (size int64, err error) {
+func (c *Converter) spanOpen(w writer, s *spanStyle) (size int64, err error) {
 	buf := &bytes.Buffer{}
 	var classes []string
 	props := map[string]string{}
 	_, _ = buf.WriteString(`<span`)
 
-	if r.isClass {
+	if c.isClass {
 		if s.foreground != "" {
 			if s.fgMode != cmRGB {
-				classes = append(classes, r.classPrefix+"fg-"+s.foreground)
+				classes = append(classes, c.classPrefix+"fg-"+s.foreground)
 			} else {
 				props["color"] = s.foreground
 			}
 		}
 		if s.background != "" {
 			if s.bgMode != cmRGB {
-				classes = append(classes, r.classPrefix+"bg-"+s.background)
+				classes = append(classes, c.classPrefix+"bg-"+s.background)
 			} else {
 				props["background-color"] = s.background
 			}
 		}
 		if s.bold {
-			classes = append(classes, r.classPrefix+"bold")
+			classes = append(classes, c.classPrefix+"bold")
 		}
 		if s.underline {
-			classes = append(classes, r.classPrefix+"underline")
+			classes = append(classes, c.classPrefix+"underline")
 		}
 		if s.strike {
-			classes = append(classes, r.classPrefix+"strike")
+			classes = append(classes, c.classPrefix+"strike")
 		}
 		if s.italic {
-			classes = append(classes, r.classPrefix+"italic")
+			classes = append(classes, c.classPrefix+"italic")
 		}
 		if s.dim {
-			classes = append(classes, r.classPrefix+"dim")
+			classes = append(classes, c.classPrefix+"dim")
 		}
 		if s.hidden {
-			classes = append(classes, r.classPrefix+"hidden")
+			classes = append(classes, c.classPrefix+"hidden")
 		}
 	} else {
 		if s.foreground != "" {
@@ -91,8 +93,8 @@ func (r *renderer) spanOpen(w writer, s *spanStyle) (size int64, err error) {
 				props["opacity"] = "0.5"
 			} else if s.foreground != "" {
 				props["color"] = s.foreground + "80"
-			} else if r.defaultFg != nil && r.defaultFg.css != "" {
-				props["color"] = r.defaultFg.css + "80"
+			} else if c.palette.foreground != nil && c.palette.foreground.css != "" {
+				props["color"] = c.palette.foreground.css + "80"
 			}
 		}
 	}
@@ -135,13 +137,13 @@ func (r *renderer) spanOpen(w writer, s *spanStyle) (size int64, err error) {
 	return io.Copy(w, buf)
 }
 
-func (r *renderer) spanClose(w writer) (size int, err error) {
+func (c *Converter) spanClose(w writer) (size int, err error) {
 	return w.WriteString("</span>")
 }
 
-func (r *renderer) rune(w writer, c rune) (size int, err error) {
-	if r.escapeHTML {
-		switch c {
+func (c *Converter) rune(w writer, char rune) (size int, err error) {
+	if c.escapeHTML {
+		switch char {
 		case '<':
 			return w.WriteString("&lt;")
 		case '>':
@@ -154,10 +156,10 @@ func (r *renderer) rune(w writer, c rune) (size int, err error) {
 			return w.WriteString("&apos;")
 		}
 	}
-	return w.WriteRune(c)
+	return w.WriteRune(char)
 }
 
-func (r *renderer) anchorOpen(w writer, a *anchor) (size int64, err error) {
+func (c *Converter) anchorOpen(w writer, a *anchor) (size int64, err error) {
 	buf := &bytes.Buffer{}
 	var keys []string
 	for k := range a.params {
@@ -167,7 +169,7 @@ func (r *renderer) anchorOpen(w writer, a *anchor) (size int64, err error) {
 	_, _ = buf.WriteString(`<a `)
 	_, _ = buf.WriteString(fmt.Sprintf("href=\"%s\"", a.url))
 	_, _ = buf.WriteString(" class=\"")
-	_, _ = buf.WriteString(r.classPrefix)
+	_, _ = buf.WriteString(c.classPrefix)
 	_, _ = buf.WriteString("link\"")
 
 	for i := 0; i < len(keys); i++ {
@@ -177,13 +179,13 @@ func (r *renderer) anchorOpen(w writer, a *anchor) (size int64, err error) {
 	return io.Copy(w, buf)
 }
 
-func (r *renderer) anchorNext(w writer, a *anchor) (size int64, err error) {
-	if n, err := r.anchorClose(w); err != nil {
+func (c *Converter) anchorNext(w writer, a *anchor) (size int64, err error) {
+	if n, err := c.anchorClose(w); err != nil {
 		return int64(n), err
 	}
-	return r.anchorOpen(w, a)
+	return c.anchorOpen(w, a)
 }
 
-func (r *renderer) anchorClose(w writer) (size int, err error) {
+func (c *Converter) anchorClose(w writer) (size int, err error) {
 	return w.WriteString("</a>")
 }

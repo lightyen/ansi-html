@@ -140,7 +140,7 @@ func ToDemo(ansiText string, options ...Option) (string, error) {
 		Background: template.CSS(bg),
 		Content:    template.HTML(content.String()),
 	}
-	if converter.mode == Class {
+	if converter.isClass {
 		payload.Class = template.CSS(fmt.Sprintf(`
 	.ansi-fg-0 { color: #3f4451 }
 	.ansi-fg-1 { color: #e05561 }
