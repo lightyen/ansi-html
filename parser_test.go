@@ -94,6 +94,15 @@ func Test(t *testing.T) {
 	expect("\x1b]8;;;;http://example.com\x1b\\helloworld\x1b\\", "helloworld")
 }
 
+func TestC1(t *testing.T) {
+	c := ansihtml.NewConverter(ansihtml.SetOptions(options))
+	expect := newExpect(t, c)
+
+	expect("he\xc2\x9b31mllo\xc2\x9d8;id=app;http://example.com\xc2\x9cThis is \xc2\x9d8;id=app:rel=noopener noreferrer;http://example.com\xc2\x9ca \xc2\x9b34mli\xc2\x9b34mnk\xc2\x9d8;;\xc2\x9cworld\xc2\x9bm",
+		`he<span style="color:#e05561">llo</span><a href="http://example.com" class="ansi-link" id="app"><span style="color:#e05561">This is </span></a><a href="http://example.com" class="ansi-link" id="app" rel="noopener noreferrer"><span style="color:#e05561">a </span><span style="color:#4aa5f0">link</span></a><span style="color:#4aa5f0">world</span>`)
+
+}
+
 func TestIverse(t *testing.T) {
 	c := ansihtml.NewConverter(ansihtml.SetTheme(ansihtml.Theme{Foreground: "#eee"}))
 	expect := newExpect(t, c)
@@ -145,7 +154,7 @@ func TestOtherClass(t *testing.T) {
 }
 
 func TestEscape(t *testing.T) {
-	c := ansihtml.NewConverter()
+	c := ansihtml.NewConverter(ansihtml.SetEscapeHTML(true))
 	expect := newExpect(t, c)
 	expect("\x1b[9;31m<x-item> \x22x&words\x22 </x-item>\x1b[0m", `<span style="color:#e05561;text-decoration:line-through">&lt;x-item&gt; &quot;x&amp;words&quot; &lt;/x-item&gt;</span>`)
 }

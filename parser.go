@@ -142,8 +142,20 @@ func (c *Converter) CopyWithContext(ctx context.Context, dst io.Writer, src io.R
 				if err := c.readAny(r); err != nil {
 					return err
 				}
-			} else {
-				// not implement yet
+			}
+			// else {
+			// 	// not implement yet
+			// }
+			continue
+		case xCSI:
+			if err := c.readCSI(r); err != nil {
+				return err
+			}
+			c.styleChanged = true
+			continue
+		case xOSC:
+			if err := c.readOSC(r, w); err != nil {
+				return err
 			}
 			continue
 		}
