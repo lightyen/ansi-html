@@ -388,8 +388,10 @@ var defaultColors = [256]string{
 }
 
 var hexRe = regexp.MustCompile("(?:^#?([A-Fa-f0-9]{6})(?:[A-Fa-f0-9]{2})?$)|(?:^#?([A-Fa-f0-9]{3})[A-Fa-f0-9]?$)")
-var rgbaRe = regexp.MustCompile("(?:^rgba?\\(\\s*([+-]?(?:\\d*[.])?\\d+)\\s*,\\s*([+-]?(?:\\d*[.])?\\d+)\\s*,\\s*([+-]?(?:\\d*[.])?\\d+)\\s*(?:,\\s*([+-]?(?:\\d*[.])?\\d+)\\s*)?\\)$)")
-var rgbaRe2 = regexp.MustCompile("(?:^rgba?\\(\\s*([+-]?(?:\\d*[.])?\\d+)\\s* \\s*([+-]?(?:\\d*[.])?\\d+)\\s* \\s*([+-]?(?:\\d*[.])?\\d+)\\s*(?:/\\s*([+-]?(?:\\d*[.])?\\d+)\\s*)?\\)$)")
+var rgbaRe = regexp.MustCompile(`(?:^rgba?\(\s*([+-]?(?:\d*[.])?\d+)\s*,\s*([+-]?(?:\d*[.])?\d+)\s*,\s*([+-]?(?:\d*[.])?\d+)\s*(?:,\s*([+-]?(?:\d*[.])?\d+)\s*)?\)$)`)
+var rgbaRe2 = regexp.MustCompile(`(?:^rgba?\(\s*([+-]?(?:\d*[.])?\d+)\s* \s*([+-]?(?:\d*[.])?\d+)\s* \s*([+-]?(?:\d*[.])?\d+)\s*(?:/\s*([+-]?(?:\d*[.])?\d+)\s*)?\)$)`)
+var hslaRe = regexp.MustCompile(`(?:^hsla?\(\s*([+-]?(?:\d*[.])?\d+)\s*,\s*([+-]?(?:\d*[.])?\d+%)\s*,\s*([+-]?(?:\d*[.])?\d+%)\s*(?:,\s*([+-]?(?:\d*[.])?\d+)\s*)?\)$)`)
+var hslaRe2 = regexp.MustCompile(`(?:^hsla?\(\s*([+-]?(?:\d*[.])?\d+)\s* \s*([+-]?(?:\d*[.])?\d+%)\s* \s*([+-]?(?:\d*[.])?\d+%)\s*(?:/\s*([+-]?(?:\d*[.])?\d+)\s*)?\)$)`)
 
 func parseColor(value string) (rune, bool) {
 	parseHexColor := func(value string) (rune, bool) {
@@ -413,30 +415,88 @@ func parseColor(value string) (rune, bool) {
 		}
 		return -1, false
 	}
-	// ignore alpha
 	parseRgbaColor := func(value string) (rune, bool) {
 		toInt := func(value string) int32 {
 			v, _ := strconv.ParseFloat(value, 32)
 			v = math.Min(255.0, math.Max(0, v))
 			return int32(math.Round(v))
 		}
-		var result = rgbaRe.FindStringSubmatch(value)
+		result := rgbaRe.FindStringSubmatch(value)
 		if result != nil {
-			if result != nil {
-				r := toInt(result[1])
-				g := toInt(result[2])
-				b := toInt(result[3])
-				return rune(r<<16 | g<<8 | b), true
-			}
+			r := toInt(result[1])
+			g := toInt(result[2])
+			b := toInt(result[3])
+			return rune(r<<16 | g<<8 | b), true
 		}
 		result = rgbaRe2.FindStringSubmatch(value)
 		if result != nil {
-			if result != nil {
-				r := toInt(result[1])
-				g := toInt(result[2])
-				b := toInt(result[3])
-				return rune(r<<16 | g<<8 | b), true
+			r := toInt(result[1])
+			g := toInt(result[2])
+			b := toInt(result[3])
+			return rune(r<<16 | g<<8 | b), true
+		}
+		return -1, false
+	}
+	parseHslaColor := func(value string) (rune, bool) {
+		hue := func(value string) float64 {
+			v, _ := strconv.ParseFloat(value, 64)
+			v = math.Mod(v, 360)
+			v = math.Min(360, math.Max(0, v))
+			return v
+		}
+		t := func(value string) float64 {
+			v, _ := strconv.ParseFloat(value, 64)
+			v = math.Min(100, math.Max(0, v)) / 100
+			return v
+		}
+		hueToRgb := func(p float64, q float64, hue float64) float64 {
+			if hue < 0 {
+				hue += 6
 			}
+			if hue >= 6 {
+				hue -= 6
+			}
+
+			if hue < 1 {
+				return p + (q-p)*hue
+			} else if hue < 3 {
+				return q
+			} else if hue < 4 {
+				return p + (q-p)*(4-hue)
+			}
+			return p
+		}
+		hslToRgb := func(h float64, s float64, l float64) (int32, int32, int32) {
+			var t1 float64
+			var t2 float64
+			h = h / 60
+			if l <= 0.5 {
+				t2 = l * (s + 1)
+			} else {
+				t2 = l + s - (l * s)
+			}
+			t1 = l*2 - t2
+			r := hueToRgb(t1, t2, h+2) * 255
+			g := hueToRgb(t1, t2, h) * 255
+			b := hueToRgb(t1, t2, h-2) * 255
+			return int32(math.Round(r)), int32(math.Round(g)), int32(math.Round(b))
+		}
+		var result = hslaRe.FindStringSubmatch(value)
+		if result != nil {
+			h := hue(result[1])
+			s := t(result[2][:len(result[2])-1])
+			l := t(result[3][:len(result[3])-1])
+			r, g, b := hslToRgb(h, s, l)
+			fmt.Println()
+			return rune(r<<16 | g<<8 | b), true
+		}
+		result = hslaRe2.FindStringSubmatch(value)
+		if result != nil {
+			h := hue(result[1])
+			s := t(result[2][:len(result[2])-1])
+			l := t(result[3][:len(result[3])-1])
+			r, g, b := hslToRgb(h, s, l)
+			return rune(r<<16 | g<<8 | b), true
 		}
 		return -1, false
 	}
@@ -444,6 +504,9 @@ func parseColor(value string) (rune, bool) {
 		return color, ok
 	}
 	if color, ok := parseRgbaColor(value); ok {
+		return color, ok
+	}
+	if color, ok := parseHslaColor(value); ok {
 		return color, ok
 	}
 	return -1, false
