@@ -487,7 +487,6 @@ func parseColor(value string) (rune, bool) {
 			s := t(result[2][:len(result[2])-1])
 			l := t(result[3][:len(result[3])-1])
 			r, g, b := hslToRgb(h, s, l)
-			fmt.Println()
 			return rune(r<<16 | g<<8 | b), true
 		}
 		result = hslaRe2.FindStringSubmatch(value)
