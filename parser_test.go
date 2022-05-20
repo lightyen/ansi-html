@@ -140,6 +140,7 @@ func TestOtherInline(t *testing.T) {
 	expect("\x1b[38;2;2;4;6mhelloworld\x1b[m", `<span style="color:#020406">helloworld</span>`)
 	expect("\x1b]8;;http://example.com\x1b\\This is a link", `<a href="http://example.com" class="ansi-link">This is a link</a>`)
 	expect("\x1b[2;31;41mhelloworld\x1b[m", `<span style="background-color:#e05561;color:#fcdfe380">helloworld</span>`)
+	expect("\x1b[2;3;4;5;7;8;9mhelloworld\x1b[m", `<span style="font-style:italic;opacity:0;text-decoration:underline line-through">helloworld</span>`)
 	expect = newExpect(t, ansihtml.NewConverter(ansihtml.SetTheme(ansihtml.Theme{Foreground: "#eee"})))
 	expect("\x1b[2;41mhelloworld\x1b[m", `<span style="background-color:#e05561;color:#eeeeee80">helloworld</span>`)
 }
@@ -149,7 +150,7 @@ func TestOtherClass(t *testing.T) {
 	expect := newExpect(t, c)
 	expect("\x1b[7mhelloworld\x1b[m", `<span class="ansi-fg-inverse ansi-bg-inverse">helloworld</span>`)
 	expect("\x1b[1;44;38;5;1mhelloworld\x1b[m", `<span class="ansi-fg-9 ansi-bg-4 ansi-bold">helloworld</span>`)
-	expect("\x1b[2;3;4;5;6;7;8;9mhelloworld\x1b[m", `<span class="ansi-fg-inverse ansi-bg-inverse ansi-underline ansi-strike ansi-italic ansi-dim ansi-hidden">helloworld</span>`)
+	expect("\x1b[2;3;4;5;7;8;9mhelloworld\x1b[m", `<span class="ansi-fg-inverse ansi-bg-inverse ansi-underline ansi-strike ansi-italic ansi-dim ansi-blink ansi-hidden">helloworld</span>`)
 	expect("\x1b[2;31;48;2;255;240;103;38;2;2;2;2mhelloworld\x1b[m", `<span class="ansi-dim" style="background-color:#fff067;color:#020202">helloworld</span>`)
 }
 

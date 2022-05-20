@@ -60,6 +60,9 @@ func (c *Converter) spanOpen(w writer, s *spanStyle) (size int64, err error) {
 		if s.dim {
 			classes = append(classes, c.classPrefix+"dim")
 		}
+		if s.blink {
+			classes = append(classes, c.classPrefix+"blink")
+		}
 		if s.hidden {
 			classes = append(classes, c.classPrefix+"hidden")
 		}

@@ -24,6 +24,7 @@ type attributes struct {
 	bold         bool
 	dim          bool
 	underline    bool
+	blink        bool
 	inverse      bool
 	italic       bool
 	strike       bool
@@ -38,6 +39,7 @@ type spanStyle struct {
 	bold       bool
 	dim        bool
 	underline  bool
+	blink      bool
 	italic     bool
 	strike     bool
 	hidden     bool
@@ -80,6 +82,7 @@ func NewConverter(options ...Option) *Converter {
 			bold:         false,
 			dim:          false,
 			underline:    false,
+			blink:        false,
 			inverse:      false,
 			italic:       false,
 			strike:       false,
@@ -199,6 +202,7 @@ func (c *Converter) Reset() {
 		bold:         false,
 		dim:          false,
 		underline:    false,
+		blink:        false,
 		inverse:      false,
 		italic:       false,
 		strike:       false,
@@ -254,6 +258,7 @@ func (c *Converter) gatherStyle() (*spanStyle, error) {
 		dim:        c.dim,
 		italic:     c.italic,
 		underline:  c.underline,
+		blink:      c.blink,
 		hidden:     c.hidden,
 		strike:     c.strike,
 	}
@@ -267,13 +272,13 @@ func (c *Converter) writeRune(w writer, char rune) error {
 		if err != nil {
 			return err
 		}
-		if !equalStyle(c.prevStyle, style) {
-			if needStyle(c.prevStyle) {
+		if !c.equalStyle(c.prevStyle, style) {
+			if c.needStyle(c.prevStyle) {
 				if _, err := c.spanClose(w); err != nil {
 					return err
 				}
 			}
-			c.isSpan = needStyle(style)
+			c.isSpan = c.needStyle(style)
 			c.prevStyle = style
 			if c.isSpan {
 				if _, err := c.spanOpen(w, style); err != nil {
@@ -289,12 +294,12 @@ func (c *Converter) writeRune(w writer, char rune) error {
 	return w.Flush()
 }
 
-func equalStyle(a *spanStyle, b *spanStyle) bool {
+func (c *Converter) equalStyle(a *spanStyle, b *spanStyle) bool {
 	if a == nil {
-		return !needStyle(b)
+		return !c.needStyle(b)
 	}
 	if b == nil {
-		return !needStyle(a)
+		return !c.needStyle(a)
 	}
 
 	return a.foreground == b.foreground &&
@@ -303,11 +308,12 @@ func equalStyle(a *spanStyle, b *spanStyle) bool {
 		a.dim == b.dim &&
 		a.italic == b.italic &&
 		a.underline == b.underline &&
+		a.blink == b.blink &&
 		a.hidden == b.hidden &&
 		a.strike == b.strike
 }
 
-func needStyle(s *spanStyle) bool {
+func (c *Converter) needStyle(s *spanStyle) bool {
 	if s == nil {
 		return false
 	}
@@ -317,6 +323,7 @@ func needStyle(s *spanStyle) bool {
 		s.dim ||
 		s.italic ||
 		s.underline ||
+		(c.isClass && s.blink) ||
 		s.hidden ||
 		s.strike
 }
@@ -330,6 +337,7 @@ func (c *Converter) resetAttributes() {
 	c.dim = false
 	c.italic = false
 	c.underline = false
+	c.blink = false
 	c.inverse = false
 	c.hidden = false
 	c.strike = false
@@ -356,6 +364,7 @@ func (c *Converter) setAttributes(attrs []rune) {
 		case yStrike:
 			c.strike = true
 		case ySlowBlink:
+			c.blink = true
 		case yRapidBlink:
 		}
 		if a >= yFgBlack && a <= yFgWhite {
